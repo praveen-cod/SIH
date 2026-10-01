@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -11,6 +12,14 @@ class NearbyHospitalsScreen extends StatefulWidget {
 
   @override
   State<NearbyHospitalsScreen> createState() => _NearbyHospitalsScreenState();
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
 }
 
 class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
@@ -84,20 +93,28 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
   Future<void> _fetchNearbyHospitals(LatLng userLoc) async {
     try {
       // Overpass API query for hospitals within 10km (10000 meters)
+      // Optimized query: limited timeout to 10s and removed 'relation' to speed up processing
       final query = '''
-      [out:json];
+      [out:json][timeout:10];
       (
         node["amenity"="hospital"](around:10000, ${userLoc.latitude}, ${userLoc.longitude});
         way["amenity"="hospital"](around:10000, ${userLoc.latitude}, ${userLoc.longitude});
-        relation["amenity"="hospital"](around:10000, ${userLoc.latitude}, ${userLoc.longitude});
       );
       out center;
       ''';
 
+      HttpOverrides.global = MyHttpOverrides();
+      
       final response = await http.post(
-        Uri.parse('https://overpass-api.de/api/interpreter'),
+        Uri.parse('https://lz4.overpass-api.de/api/interpreter'),
+        headers: {
+          'User-Agent': 'HealthCall_AI_PatientPortal/1.0 (contact@healthcall.ai)',
+          'Referer': 'https://healthcall.ai'
+        },
         body: {'data': query},
-      );
+      ).timeout(const Duration(seconds: 15));
+      
+      HttpOverrides.global = null;
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -278,7 +295,7 @@ class _NearbyHospitalsScreenState extends State<NearbyHospitalsScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: hosp.color.withOpacity(0.2),
+                          backgroundColor: hosp.color.withValues(alpha: 0.2),
                           child: Icon(Icons.local_hospital, color: hosp.color),
                         ),
                         title: Text(

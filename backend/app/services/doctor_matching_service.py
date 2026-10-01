@@ -14,8 +14,9 @@ from ..schemas.availability import AvailabilityResponse
 
 SPECIALIZATION_KEYWORDS = {
     "Cardiologist": [
-        "chest pain", "heart", "palpitation", "palpitations", "angina",
+        "chest pain", "heart", "heart pain", "palpitation", "palpitations", "angina",
         "shortness of breath", "blood pressure", "hypertension", "pulse",
+        "nenju vali", "cardiac", "heart attack", "myocardial", "arrhythmia",
     ],
     "Dermatologist": [
         "skin", "rash", "acne", "itching", "itch", "eczema", "allergy",

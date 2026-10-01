@@ -31,6 +31,7 @@ class VideoCallService {
               : ZegoCallInvitationType.videoCall == data.type
                   ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
                   : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall();
+                  
           return config;
         },
       );
@@ -43,3 +44,4 @@ class VideoCallService {
     ZegoUIKitPrebuiltCallInvitationService().uninit();
   }
 }
+
