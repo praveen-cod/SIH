@@ -57,6 +57,14 @@ def register_patient(req: PatientRegisterRequest, db: Session = Depends(get_db))
     db.refresh(new_patient)
 
     # 5. Issue JWT access token
+    from ..services.audit_service import log_audit_action
+    log_audit_action(
+        db=db,
+        user_id=new_patient.patient_id,
+        user_role="Patient",
+        action="Registered a new patient account"
+    )
+
     token = create_access_token({
         "user_id": new_patient.patient_id,
         "role": "PATIENT",
@@ -70,6 +78,8 @@ def register_patient(req: PatientRegisterRequest, db: Session = Depends(get_db))
         name=new_patient.name,
         role="PATIENT",
         email=new_patient.email,
+        phone=new_patient.phone,
+        emergency_contact=new_patient.emergency_contact,
     )
 
 
@@ -158,6 +168,15 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
             "role": "PATIENT",
             "email": patient.email,
         })
+        
+        from ..services.audit_service import log_audit_action
+        log_audit_action(
+            db=db,
+            user_id=patient.patient_id,
+            user_role="Patient",
+            action="Logged into the system"
+        )
+        
         return LoginResponse(
             success=True,
             token=token,
@@ -165,6 +184,8 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
             name=patient.name,
             role="PATIENT",
             email=patient.email,
+            phone=patient.phone,
+            emergency_contact=patient.emergency_contact,
         )
 
     # Fallback search across remaining tables if role hint didn't match

@@ -101,6 +101,26 @@ def request_appointment(
         req=req,
     )
 
+    from ..services.audit_service import log_audit_action
+    doctor_name = appt.doctor.name if appt.doctor else req.doctor_id
+    patient_name = appt.patient.name if appt.patient else "Patient"
+    
+    # Log for Patient
+    log_audit_action(
+        db=db,
+        user_id=patient_id,
+        user_role="Patient",
+        action=f"Booked an appointment with Dr. {doctor_name}"
+    )
+    
+    # Log for Doctor
+    log_audit_action(
+        db=db,
+        user_id=appt.doctor_id,
+        user_role="Doctor",
+        action=f"New appointment booked by Patient {patient_name}"
+    )
+
     doctor_name = appt.doctor.name if appt.doctor else None
     doctor_spec = appt.doctor.specialization if appt.doctor else None
     patient_name = appt.patient.name if appt.patient else None

@@ -100,12 +100,719 @@ CRITICAL MEDICAL & CONVERSATIONAL RULES:
   "intake_complete": boolean
 }
 """
-
 EMERGENCY_KEYWORDS = [
-    "chest pain", "heart attack", "can't breathe", "cannot breathe", "difficulty breathing",
-    "shortness of breath", "stroke", "paralysis", "unconscious", "passed out", "heavy bleeding",
-    "bleeding heavily", "seizure", "fit", "convulsion", "anaphylaxis", "suicide", "kill myself",
-    "நெஞ்சு வலி", "மூச்சு திணறல்", "छाती में दर्द", "सांस लेने में तकलीफ", "గుండె నొప్పి"
+
+    # ============================================================
+    # 1. CHEST PAIN / HEART ATTACK / CARDIAC EMERGENCY
+    # ============================================================
+
+    "chest pain",
+    "chest pressure",
+    "chest tightness",
+    "chest discomfort",
+    "pain in chest",
+    "pain around chest",
+    "pain under chest",
+    "crushing chest pain",
+    "severe chest pain",
+    "heavy chest",
+    "pressure in chest",
+    "tightness in chest",
+    "burning chest pain",
+    "heart pain",
+    "heart attack",
+    "heart attack symptoms",
+    "possible heart attack",
+    "heart problem",
+    "heart emergency",
+    "heart is hurting",
+    "heart hurts",
+    "pain near heart",
+    "pain on left side of chest",
+    "pain spreading to arm",
+    "pain spreading to jaw",
+    "pain spreading to shoulder",
+    "pain spreading to back",
+    "left arm pain with chest pain",
+    "sudden chest pain",
+    "sudden heart pain",
+    "palpitations with chest pain",
+    "chest pain and sweating",
+    "chest pain and nausea",
+    "chest pain and dizziness",
+
+    # ============================================================
+    # 2. BREATHING EMERGENCIES
+    # ============================================================
+
+    "can't breathe",
+    "cannot breathe",
+    "cant breathe",
+    "unable to breathe",
+    "difficulty breathing",
+    "difficulty in breathing",
+    "trouble breathing",
+    "having trouble breathing",
+    "shortness of breath",
+    "breathlessness",
+    "severe breathlessness",
+    "extreme breathlessness",
+    "gasping for air",
+    "gasping",
+    "gasping for breath",
+    "choking",
+    "choking sensation",
+    "suffocating",
+    "suffocation",
+    "feeling suffocated",
+    "not getting enough air",
+    "can't get enough air",
+    "cannot get enough air",
+    "struggling to breathe",
+    "struggling for breath",
+    "breathing stopped",
+    "stopped breathing",
+    "unable to catch breath",
+    "cannot catch breath",
+    "breathing very fast",
+    "severe wheezing",
+    "blue lips",
+    "lips turning blue",
+    "turning blue",
+    "cyanosis",
+
+    # ============================================================
+    # 3. STROKE / NEUROLOGICAL EMERGENCY
+    # ============================================================
+
+    "stroke",
+    "possible stroke",
+    "stroke symptoms",
+    "brain stroke",
+    "paralysis",
+    "sudden paralysis",
+    "face paralysis",
+    "facial paralysis",
+    "arm paralysis",
+    "leg paralysis",
+    "one side paralysis",
+    "weakness on one side",
+    "sudden weakness",
+    "sudden numbness",
+    "numbness on one side",
+    "face drooping",
+    "facial drooping",
+    "drooping face",
+    "unable to move arm",
+    "unable to move leg",
+    "cannot move arm",
+    "cannot move leg",
+    "slurred speech",
+    "speech difficulty",
+    "difficulty speaking",
+    "cannot speak",
+    "can't speak",
+    "unable to speak",
+    "confused speech",
+    "sudden confusion",
+    "loss of balance",
+    "sudden loss of balance",
+    "difficulty walking",
+    "sudden vision loss",
+    "loss of vision",
+    "blurred vision with weakness",
+    "double vision",
+    "severe sudden headache",
+    "worst headache of my life",
+
+    # ============================================================
+    # 4. LOSS OF CONSCIOUSNESS
+    # ============================================================
+
+    "unconscious",
+    "unresponsive",
+    "not responding",
+    "doesn't respond",
+    "not responding to me",
+    "passed out",
+    "fainted",
+    "fainting",
+    "lost consciousness",
+    "loss of consciousness",
+    "blacked out",
+    "blackout",
+    "collapsed",
+    "suddenly collapsed",
+    "found unconscious",
+    "cannot wake up",
+    "can't wake up",
+    "not waking up",
+    "difficult to wake",
+    "unresponsive person",
+
+    # ============================================================
+    # 5. SEIZURES
+    # ============================================================
+
+    "seizure",
+    "seizures",
+    "fit",
+    "fits",
+    "convulsion",
+    "convulsions",
+    "having a seizure",
+    "having fits",
+    "shaking uncontrollably",
+    "uncontrolled shaking",
+    "body shaking",
+    "violent shaking",
+    "jerking uncontrollably",
+    "loss of consciousness with shaking",
+    "seizure attack",
+    "epileptic seizure",
+    "continuous seizure",
+    "repeated seizures",
+    "seizure lasting long",
+    "first seizure",
+
+    # ============================================================
+    # 6. SEVERE BLEEDING
+    # ============================================================
+
+    "heavy bleeding",
+    "bleeding heavily",
+    "severe bleeding",
+    "massive bleeding",
+    "uncontrolled bleeding",
+    "bleeding won't stop",
+    "bleeding will not stop",
+    "blood won't stop",
+    "blood will not stop",
+    "losing a lot of blood",
+    "lost a lot of blood",
+    "blood everywhere",
+    "bleeding continuously",
+    "profuse bleeding",
+    "arterial bleeding",
+    "blood spurting",
+    "blood is pouring",
+    "severe blood loss",
+
+    # ============================================================
+    # 7. INTERNAL BLEEDING / BLOOD VOMITING
+    # ============================================================
+
+    "vomiting blood",
+    "throwing up blood",
+    "blood in vomit",
+    "coughing blood",
+    "coughing up blood",
+    "blood in stool",
+    "bloody stool",
+    "black stool",
+    "black tarry stool",
+    "blood in urine with severe pain",
+    "internal bleeding",
+    "possible internal bleeding",
+    "bleeding inside",
+    "blood coming from mouth",
+
+    # ============================================================
+    # 8. ALLERGIC / ANAPHYLAXIS EMERGENCY
+    # ============================================================
+
+    "anaphylaxis",
+    "anaphylactic shock",
+    "severe allergic reaction",
+    "allergic reaction",
+    "allergic shock",
+    "throat swelling",
+    "swelling of throat",
+    "tongue swelling",
+    "swollen tongue",
+    "face swelling",
+    "lip swelling",
+    "difficulty swallowing",
+    "cannot swallow",
+    "throat closing",
+    "throat is closing",
+    "can't swallow",
+    "difficulty breathing after allergy",
+    "rash and difficulty breathing",
+    "hives and difficulty breathing",
+    "severe allergy",
+    "allergy causing breathing problem",
+
+    # ============================================================
+    # 9. POISONING / OVERDOSE
+    # ============================================================
+
+    "poisoning",
+    "poisoned",
+    "poison",
+    "possible poisoning",
+    "chemical poisoning",
+    "drug overdose",
+    "overdose",
+    "took too many pills",
+    "taken too many tablets",
+    "took too much medicine",
+    "accidentally swallowed poison",
+    "swallowed chemicals",
+    "drank poison",
+    "chemical ingestion",
+    "medicine overdose",
+    "tablet overdose",
+    "unknown substance ingestion",
+    "toxic exposure",
+    "chemical exposure",
+    "gas poisoning",
+    "carbon monoxide poisoning",
+
+    # ============================================================
+    # 10. SUICIDE / SELF-HARM
+    # ============================================================
+
+    "suicide",
+    "suicidal",
+    "suicidal thoughts",
+    "suicidal thought",
+    "want to die",
+    "I want to die",
+    "don't want to live",
+    "do not want to live",
+    "I don't want to live",
+    "I do not want to live",
+    "kill myself",
+    "I will kill myself",
+    "going to kill myself",
+    "thinking about suicide",
+    "thinking of suicide",
+    "planning suicide",
+    "suicide plan",
+    "attempt suicide",
+    "suicide attempt",
+    "self harm",
+    "self-harm",
+    "hurt myself",
+    "harm myself",
+    "going to hurt myself",
+    "going to harm myself",
+    "cut myself",
+    "overdose myself",
+
+    # ============================================================
+    # 11. SEVERE HEADACHE / BRAIN EMERGENCY
+    # ============================================================
+
+    "worst headache",
+    "worst headache of my life",
+    "sudden severe headache",
+    "sudden headache",
+    "thunderclap headache",
+    "explosive headache",
+    "extremely severe headache",
+    "severe headache with vomiting",
+    "severe headache with confusion",
+    "severe headache with weakness",
+    "severe headache with fainting",
+    "head injury with severe headache",
+    "headache after head injury",
+
+    # ============================================================
+    # 12. SEVERE ABDOMINAL EMERGENCIES
+    # ============================================================
+
+    "severe abdominal pain",
+    "severe stomach pain",
+    "extreme stomach pain",
+    "unbearable stomach pain",
+    "severe belly pain",
+    "severe abdominal pain",
+    "sudden severe abdominal pain",
+    "acute abdominal pain",
+    "abdomen is extremely painful",
+    "stomach is extremely painful",
+    "severe lower abdominal pain",
+    "severe upper abdominal pain",
+    "severe right abdominal pain",
+    "severe left abdominal pain",
+
+    # ============================================================
+    # 13. SEVERE PAIN
+    # ============================================================
+
+    "severe pain",
+    "extreme pain",
+    "unbearable pain",
+    "excruciating pain",
+    "agonizing pain",
+    "worst pain",
+    "pain is unbearable",
+    "pain is unbearable now",
+    "pain is extremely severe",
+    "sudden severe pain",
+    "sudden unbearable pain",
+
+    # ============================================================
+    # 14. MAJOR TRAUMA / ACCIDENT
+    # ============================================================
+
+    "major accident",
+    "serious accident",
+    "car accident",
+    "road accident",
+    "bike accident",
+    "motorcycle accident",
+    "vehicle accident",
+    "traffic accident",
+    "hit by car",
+    "hit by vehicle",
+    "run over",
+    "serious injury",
+    "major injury",
+    "severe injury",
+    "multiple injuries",
+    "major trauma",
+    "head injury",
+    "severe head injury",
+    "spinal injury",
+    "back injury after accident",
+    "neck injury after accident",
+    "broken neck",
+    "possible spinal injury",
+
+    # ============================================================
+    # 15. BURNS
+    # ============================================================
+
+    "severe burn",
+    "major burn",
+    "deep burn",
+    "third degree burn",
+    "chemical burn",
+    "electrical burn",
+    "burned badly",
+    "burnt badly",
+    "burn covering large area",
+    "face burn",
+    "airway burn",
+    "burning airway",
+    "burn injury",
+
+    # ============================================================
+    # 16. DROWNING / ASPHYXIATION
+    # ============================================================
+
+    "drowning",
+    "drowned",
+    "nearly drowned",
+    "almost drowned",
+    "can't breathe after drowning",
+    "water in lungs",
+    "choking on water",
+    "strangulation",
+    "strangled",
+    "suffocation",
+    "asphyxiation",
+
+    # ============================================================
+    # 17. DIABETIC EMERGENCIES
+    # ============================================================
+
+    "diabetic emergency",
+    "severe low blood sugar",
+    "very low blood sugar",
+    "hypoglycemia",
+    "severe hypoglycemia",
+    "diabetic unconscious",
+    "diabetic coma",
+    "high blood sugar with vomiting",
+    "very high blood sugar",
+    "diabetic ketoacidosis",
+    "DKA",
+    "ketoacidosis",
+    "deep breathing with diabetes",
+    "fruity breath with diabetes",
+    "confusion with diabetes",
+
+    # ============================================================
+    # 18. SEVERE INFECTION / SEPSIS
+    # ============================================================
+
+    "sepsis",
+    "septic shock",
+    "severe infection",
+    "infection and confusion",
+    "infection and unconscious",
+    "very high fever and confusion",
+    "high fever and difficulty breathing",
+    "high fever and severe weakness",
+    "shaking chills with confusion",
+    "extremely weak with fever",
+    "rapid breathing with fever",
+    "very fast heartbeat with fever",
+
+    # ============================================================
+    # 19. PREGNANCY / OBSTETRIC EMERGENCIES
+    # ============================================================
+
+    "pregnancy emergency",
+    "pregnant and bleeding",
+    "heavy bleeding during pregnancy",
+    "severe abdominal pain during pregnancy",
+    "severe pelvic pain during pregnancy",
+    "pregnant and unconscious",
+    "pregnant and difficulty breathing",
+    "pregnancy seizure",
+    "severe headache during pregnancy",
+    "blurred vision during pregnancy",
+    "possible ectopic pregnancy",
+    "water broke with heavy bleeding",
+    "heavy bleeding after delivery",
+    "postpartum hemorrhage",
+    "severe bleeding after childbirth",
+
+    # ============================================================
+    # 20. CHILD / INFANT EMERGENCIES
+    # ============================================================
+
+    "baby not breathing",
+    "baby cannot breathe",
+    "child cannot breathe",
+    "child having seizure",
+    "baby having seizure",
+    "child unconscious",
+    "baby unconscious",
+    "child not responding",
+    "baby not responding",
+    "baby turning blue",
+    "child turning blue",
+    "infant choking",
+    "baby choking",
+    "child choking",
+    "newborn not breathing",
+
+    # ============================================================
+    # 21. TAMIL
+    # ============================================================
+
+    "நெஞ்சு வலி",
+    "மார்பு வலி",
+    "மார்பில் வலி",
+    "இதய வலி",
+    "மார்பில் அழுத்தம்",
+    "மூச்சு திணறல்",
+    "மூச்சுத்திணறல்",
+    "மூச்சு விட முடியவில்லை",
+    "மூச்சு விட கஷ்டமாக இருக்கிறது",
+    "மூச்சு வாங்குகிறது",
+    "மூச்சு அடைக்கிறது",
+    "மயக்கம்",
+    "மயங்கி விழுந்தேன்",
+    "நினைவு இல்லை",
+    "நினைவிழந்தார்",
+    "வலிப்பு",
+    "வலிப்பு வந்தது",
+    "கடுமையான வலி",
+    "தாங்க முடியாத வலி",
+    "அதிக இரத்தப்போக்கு",
+    "ரத்தம் அதிகமாக வருகிறது",
+    "ரத்தம் நிற்கவில்லை",
+    "ரத்த வாந்தி",
+    "வாந்தியில் ரத்தம்",
+    "பக்கவாதம்",
+    "கை கால் செயலிழப்பு",
+    "ஒரு பக்கம் செயலிழந்தது",
+    "பேச முடியவில்லை",
+    "முகம் ஒரு பக்கம் சாய்ந்துள்ளது",
+    "தற்கொலை",
+    "நான் இறக்க விரும்புகிறேன்",
+    "என்னை நானே கொல்லப் போகிறேன்",
+    "எனக்கு வாழ விருப்பமில்லை",
+    "விஷம் குடித்தேன்",
+    "மருந்து அதிகமாக எடுத்தேன்",
+    "கழுத்து வீக்கம்",
+    "நாக்கு வீக்கம்",
+
+    # ============================================================
+    # 22. HINDI
+    # ============================================================
+
+    "छाती में दर्द",
+    "सीने में दर्द",
+    "सीने में भारीपन",
+    "दिल में दर्द",
+    "दिल का दौरा",
+    "सांस लेने में तकलीफ",
+    "सांस लेने में दिक्कत",
+    "सांस नहीं आ रही",
+    "दम घुट रहा है",
+    "बहुत तेज सांस फूलना",
+    "बेहोश",
+    "बेहोशी",
+    "बेहोश हो गया",
+    "दौरा",
+    "मिर्गी का दौरा",
+    "बहुत ज्यादा खून बह रहा है",
+    "खून बहना बंद नहीं हो रहा",
+    "खून की उल्टी",
+    "उल्टी में खून",
+    "लकवा",
+    "अचानक लकवा",
+    "बोल नहीं पा रहा",
+    "चेहरा टेढ़ा हो गया",
+    "एक तरफ कमजोरी",
+    "आत्महत्या",
+    "मैं मरना चाहता हूं",
+    "मैं खुद को मारना चाहता हूं",
+    "जहर खा लिया",
+    "जहर पी लिया",
+    "दवा की ज्यादा मात्रा",
+    "गंभीर एलर्जी",
+    "गला सूज गया",
+
+    # ============================================================
+    # 23. TELUGU
+    # ============================================================
+
+    "గుండె నొప్పి",
+    "ఛాతి నొప్పి",
+    "ఛాతీలో నొప్పి",
+    "గుండెపోటు",
+    "ఊపిరి తీసుకోవడం కష్టం",
+    "ఊపిరి ఆడటం లేదు",
+    "శ్వాస తీసుకోవడంలో ఇబ్బంది",
+    "ఊపిరి ఆడకపోవడం",
+    "స్పృహ కోల్పోయాడు",
+    "స్పృహ లేదు",
+    "మూర్ఛ",
+    "మూర్ఛ వచ్చింది",
+    "ఎక్కువ రక్తస్రావం",
+    "రక్తస్రావం ఆగడం లేదు",
+    "రక్తం వాంతి",
+    "పక్షవాతం",
+    "ఒక వైపు బలహీనత",
+    "మాట్లాడలేకపోతున్నాను",
+    "ఆత్మహత్య",
+    "నేను చనిపోవాలనుకుంటున్నాను",
+    "విషం తాగాను",
+    "మందులు ఎక్కువగా తీసుకున్నాను",
+
+    # ============================================================
+    # 24. KANNADA
+    # ============================================================
+
+    "ಎದೆ ನೋವು",
+    "ಎದೆಯಲ್ಲಿ ನೋವು",
+    "ಹೃದಯ ನೋವು",
+    "ಹೃದಯಾಘಾತ",
+    "ಉಸಿರಾಟದ ತೊಂದರೆ",
+    "ಉಸಿರಾಡಲು ಆಗುತ್ತಿಲ್ಲ",
+    "ಉಸಿರಾಟ ಕಷ್ಟ",
+    "ಪ್ರಜ್ಞೆ ತಪ್ಪಿದೆ",
+    "ಪ್ರಜ್ಞೆ ಇಲ್ಲ",
+    "ಮೂರ್ಛೆ",
+    "ಸೆಳೆತ",
+    "ಹೆಚ್ಚಿನ ರಕ್ತಸ್ರಾವ",
+    "ರಕ್ತಸ್ರಾವ ನಿಲ್ಲುತ್ತಿಲ್ಲ",
+    "ರಕ್ತ ವಾಂತಿ",
+    "ಪಾರ್ಶ್ವವಾಯು",
+    "ಆತ್ಮಹತ್ಯೆ",
+    "ನಾನು ಸಾಯಲು ಬಯಸುತ್ತೇನೆ",
+    "ವಿಷ ಸೇವಿಸಿದ್ದೇನೆ",
+
+    # ============================================================
+    # 25. MALAYALAM
+    # ============================================================
+
+    "നെഞ്ചുവേദന",
+    "നെഞ്ചിൽ വേദന",
+    "ഹൃദയ വേദന",
+    "ഹൃദയാഘാതം",
+    "ശ്വാസംമുട്ടൽ",
+    "ശ്വാസം എടുക്കാൻ കഴിയുന്നില്ല",
+    "ശ്വാസതടസ്സം",
+    "ബോധരഹിതനായി",
+    "ബോധം പോയി",
+    "അപസ്മാരം",
+    "വലിവ്",
+    "അമിത രക്തസ്രാവം",
+    "രക്തസ്രാവം നിൽക്കുന്നില്ല",
+    "രക്തം ഛർദ്ദിക്കുന്നു",
+    "പക്ഷാഘാതം",
+    "ആത്മഹത്യ",
+    "ഞാൻ മരിക്കാൻ ആഗ്രഹിക്കുന്നു",
+    "വിഷം കഴിച്ചു",
+
+    # ============================================================
+    # 26. BENGALI
+    # ============================================================
+
+    "বুকে ব্যথা",
+    "বুকে চাপ",
+    "হৃদয়ে ব্যথা",
+    "হার্ট অ্যাটাক",
+    "শ্বাস নিতে কষ্ট",
+    "শ্বাস নিতে পারছি না",
+    "শ্বাসকষ্ট",
+    "অজ্ঞান",
+    "অজ্ঞান হয়ে গেছে",
+    "খিঁচুনি",
+    "অতিরিক্ত রক্তপাত",
+    "রক্তপাত বন্ধ হচ্ছে না",
+    "রক্ত বমি",
+    "স্ট্রোক",
+    "পক্ষাঘাত",
+    "আত্মহত্যা",
+    "আমি মরতে চাই",
+    "বিষ খেয়েছি",
+
+    # ============================================================
+    # 27. MARATHI
+    # ============================================================
+
+    "छातीत दुखत आहे",
+    "छातीत वेदना",
+    "हृदय दुखत आहे",
+    "हृदयविकाराचा झटका",
+    "श्वास घेण्यास त्रास",
+    "श्वास घेता येत नाही",
+    "श्वास घेण्यास अडचण",
+    "बेशुद्ध",
+    "बेशुद्ध पडला",
+    "फिट आली",
+    "जास्त रक्तस्त्राव",
+    "रक्तस्त्राव थांबत नाही",
+    "रक्ताची उलटी",
+    "पक्षाघात",
+    "आत्महत्या",
+    "मला मरायचे आहे",
+    "विष घेतले",
+
+    # ============================================================
+    # 28. URDU / HINGLISH COMMON PHRASES
+    # ============================================================
+
+    "seene mein dard",
+    "seene mein pressure",
+    "dil mein dard",
+    "dil ka daura",
+    "saans lene mein dikkat",
+    "saans nahi aa rahi",
+    "dum ghut raha hai",
+    "behosh ho gaya",
+    "behoshi",
+    "daura pada",
+    "bahut khoon beh raha hai",
+    "khoon ruk nahi raha",
+    "khoon ki ulti",
+    "lakwa",
+    "bol nahi paa raha",
+    "khud ko maarna chahta hoon",
+    "marna chahta hoon",
+    "zeher kha liya",
+    "dawai zyada kha li",
 ]
 
 
@@ -180,7 +887,15 @@ def fallback_rule_based_response(session: ConsultationSession, user_message: str
             resp = "⚠️ Your symptoms may require immediate medical evaluation. Please contact emergency services or proceed to the nearest emergency room immediately."
 
         intake.clinical_summary = f"Emergency clinical intake triggered. Acute presentation: {user_message}. Immediate medical escalation required."
-        intake.recommended_specialist = "Emergency Medicine"
+        
+        lower_msg = user_message.lower()
+        if any(w in lower_msg for w in ["heart", "chest", "cardiac", "stroke", "myocardial"]):
+            intake.recommended_specialist = "Cardiologist"
+        elif any(w in lower_msg for w in ["stroke", "paralysis", "numbness", "face drooping", "speech"]):
+            intake.recommended_specialist = "Neurologist"
+        else:
+            intake.recommended_specialist = "Emergency Medicine"
+            
         intake.key_observations = ["Acute emergency symptoms reported", "Immediate clinical triage required"]
         intake.triage_level = "Emergency"
 
@@ -190,7 +905,7 @@ def fallback_rule_based_response(session: ConsultationSession, user_message: str
             "extracted_data": intake.model_dump(),
             "missing_fields": [],
             "should_flag_emergency": True,
-            "intake_complete": False,
+            "intake_complete": True,
         }
 
     # Step 1: For guests, collect demographic info first
@@ -639,15 +1354,31 @@ Return ONLY valid JSON matching the system instruction schema.
                 if ext.get("triage_level"):
                     session.intake_data.triage_level = ext["triage_level"]
 
-            if data.get("should_flag_emergency"):
+            if data.get("should_flag_emergency") or session.intake_data.should_flag_emergency:
                 session.intake_data.should_flag_emergency = True
                 session.status = ConsultationStatus.emergency
+                if not session.intake_data.chief_complaint:
+                    session.intake_data.chief_complaint = user_message[:100]
+                if not session.intake_data.symptoms:
+                    session.intake_data.symptoms.append(user_message[:50])
+                if not session.intake_data.clinical_summary:
+                    session.intake_data.clinical_summary = f"Emergency flagged based on user input: {user_message[:100]}"
 
             if data.get("intake_complete"):
                 session.intake_data.intake_complete = True
                 session.status = ConsultationStatus.completed
 
             session.intake_data.preferred_language = data.get("language", session.intake_data.preferred_language)
+
+            # Keep API response aligned with session (heuristic may flag emergency before Gemini JSON)
+            data["should_flag_emergency"] = bool(
+                data.get("should_flag_emergency") or session.intake_data.should_flag_emergency
+            )
+            if data["should_flag_emergency"]:
+                session.intake_data.should_flag_emergency = True
+            data["extracted_data"] = session.intake_data.model_dump()
+            if session.intake_data.intake_complete:
+                data["intake_complete"] = True
 
             return data
 
@@ -657,3 +1388,209 @@ Return ONLY valid JSON matching the system instruction schema.
 
     print("All Gemini models failed. Engaging adaptive clinical fallback engine.")
     return fallback_rule_based_response(session, user_message)
+
+async def analyze_document(file_base64: str, mime_type: str, language: str = "en") -> str:
+    """Uses Gemini to extract information from an uploaded document/image."""
+    if not _client_initialized:
+        return "Document received, but AI analysis is currently unavailable."
+    
+    try:
+        model = genai.GenerativeModel("gemini-flash-latest")
+        
+        prompt = (
+            f"Please analyze this medical document/image and extract the key information. "
+            f"Provide a concise summary of the findings in {language}. "
+            f"If it's a lab report, highlight any abnormal values. If it's a prescription, list the medications. "
+            f"If it's a wound/scan, describe the visual observations."
+        )
+        
+        import base64
+        file_bytes = base64.b64decode(file_base64)
+        
+        content = [
+            prompt,
+            {
+                "mime_type": mime_type,
+                "data": file_bytes
+            }
+        ]
+        
+        response = await model.generate_content_async(content)
+        return response.text
+    except Exception as e:
+        print(f"Error analyzing document: {e}")
+        return f"Document received, but analysis failed: {str(e)}"
+
+
+import asyncio
+
+async def extract_structured_medical_data(file_base64: str, mime_type: str, file_name: str = "") -> dict:
+    # Simulating AI processing delay
+    await asyncio.sleep(3.0)
+    
+    file_name = file_name.lower()
+    
+    # Base dictionary
+    result = {}
+    
+    # Always include demographics for mock simplicity
+    result["demographics"] = {
+        "age": 42,
+        "gender": "Male",
+        "height_cm": 178.0,
+        "weight_kg": 75.5,
+        "bmi": 23.8,
+        "smoking_status": "Non-smoker",
+        "alcohol_use": "Occasional",
+        "blood_group": "O Positive",
+        "blood_type": "O Positive",
+        "city": "Chennai",
+        "country": "Tamil Nadu",
+        "emergency_contact": "+91 98765 43211",
+        "phone": "+91 98765 43210"
+    }
+
+    if "lab" in file_name or "blood" in file_name:
+        result["lab_results"] = [
+            {
+                "test_name": "HbA1c",
+                "value": "6.8",
+                "unit": "%",
+                "reference_min": "4.0",
+                "reference_max": "5.6",
+                "test_date": "2026-08-15",
+                "abnormal_flag": True
+            },
+            {
+                "test_name": "Fasting Blood Glucose",
+                "value": "110",
+                "unit": "mg/dL",
+                "reference_min": "70",
+                "reference_max": "99",
+                "test_date": "2026-08-15",
+                "abnormal_flag": True
+            },
+            {
+                "test_name": "Total Cholesterol",
+                "value": "180",
+                "unit": "mg/dL",
+                "reference_min": "125",
+                "reference_max": "200",
+                "test_date": "2026-08-15",
+                "abnormal_flag": False
+            }
+        ]
+        
+    elif "prescription" in file_name:
+        result["medications"] = [
+            {
+                "drug_name": "Metformin",
+                "dosage": "500mg",
+                "frequency": "Twice daily",
+                "route": "Oral",
+                "start_date": "2018-05-15",
+                "end_date": "2026-12-31",
+                "status": "Active"
+            },
+            {
+                "drug_name": "Lisinopril",
+                "dosage": "10mg",
+                "frequency": "Once daily",
+                "route": "Oral",
+                "start_date": "2020-11-05",
+                "end_date": "2026-12-31",
+                "status": "Active"
+            }
+        ]
+        
+    else:
+        # Default medical record
+        result["medical_history"] = [
+            {
+                "condition": "Type 2 Diabetes Mellitus",
+                "diagnosis_date": "2018-05-12",
+                "duration": "8 years",
+                "severity": "Moderate",
+                "status": "Active",
+                "notes": "Well controlled with Metformin"
+            },
+            {
+                "condition": "Hypertension",
+                "diagnosis_date": "2020-11-01",
+                "duration": "5 years",
+                "severity": "Mild",
+                "status": "Active",
+                "notes": "Monitor BP regularly"
+            }
+        ]
+        result["diagnoses"] = [
+            {
+                "diagnosis_name": "Essential (primary) hypertension",
+                "diagnosis_code": "I10",
+                "diagnosis_date": "2020-11-01",
+                "status": "Active",
+                "severity": "Mild"
+            },
+            {
+                "diagnosis_name": "Type 2 diabetes mellitus",
+                "diagnosis_code": "E11.9",
+                "diagnosis_date": "2018-05-12",
+                "status": "Active",
+                "severity": "Moderate"
+            }
+        ]
+        result["allergies"] = [
+            {
+                "allergen": "Penicillin",
+                "reaction": "Hives",
+                "severity": "Severe",
+                "status": "Active"
+            },
+            {
+                "allergen": "Peanuts",
+                "reaction": "Mild swelling",
+                "severity": "Mild",
+                "status": "Active"
+            }
+        ]
+        result["vital_signs"] = [
+            {
+                "measurement_date": "2026-09-29T10:30:00",
+                "heart_rate": "72",
+                "systolic_bp": "128",
+                "diastolic_bp": "82",
+                "respiratory_rate": "16",
+                "temperature": "98.6",
+                "oxygen_saturation": "98",
+                "weight": "75.5",
+                "height": "178.0"
+            }
+        ]
+        result["family_history"] = [
+            {
+                "condition": "Coronary Artery Disease",
+                "relationship": "Father",
+                "age_of_onset": 55
+            },
+            {
+                "condition": "Type 2 Diabetes",
+                "relationship": "Mother",
+                "age_of_onset": 50
+            }
+        ]
+        result["procedures"] = [
+            {
+                "procedure_name": "Appendectomy",
+                "procedure_date": "2010-03-20",
+                "body_site": "Abdomen",
+                "outcome": "Successful recovery"
+            }
+        ]
+        result["reproductive_status"] = {
+            "pregnancy_status": "Not Applicable",
+            "pregnancy_test": "N/A",
+            "contraception_method": "N/A",
+            "menopause_status": "N/A"
+        }
+        
+    return result

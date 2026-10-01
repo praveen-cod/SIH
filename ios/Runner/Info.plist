@@ -69,5 +69,7 @@
 	<string>HealthCall AI needs microphone access to accurately capture your voice symptoms for medical intake.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>HealthCall AI uses speech recognition to convert spoken medical symptoms to text in your preferred language.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>HealthCall AI needs location access to alert emergency services or nearby hospitals during a critical health emergency.</string>
 </dict>
 </plist>

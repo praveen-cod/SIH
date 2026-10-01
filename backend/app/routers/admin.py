@@ -286,3 +286,20 @@ def list_system_appointments(
         )
         for a in appts
     ]
+
+# ---------------------------------------------------------------------------
+# Audit Logs
+# ---------------------------------------------------------------------------
+
+from ..models.audit_log import AuditLog
+from ..schemas.audit_log import AuditLogResponse
+
+@router.get("/audit-logs", response_model=List[AuditLogResponse])
+def get_audit_logs(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: dict = Depends(require_role(["ADMIN"])),
+    db: Session = Depends(get_db),
+):
+    """Admin view of all audit logs."""
+    return db.query(AuditLog).order_by(AuditLog.created_at.desc()).offset(skip).limit(limit).all()

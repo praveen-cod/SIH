@@ -18,6 +18,8 @@ class LoginResponse(BaseModel):
     name: Optional[str] = None
     role: Optional[str] = None
     email: Optional[str] = None
+    phone: Optional[str] = None
+    emergency_contact: Optional[str] = None
     error: Optional[str] = None
 
 

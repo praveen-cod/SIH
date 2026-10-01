@@ -8,7 +8,13 @@ import os
 from contextlib import asynccontextmanager
 
 # Ensure backend root is on sys.path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _BACKEND_ROOT)
+
+# Load Twilio/Gemini/etc. before routers import twilio_service (must run for uvicorn app.main:app too)
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(_BACKEND_ROOT, ".env"))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

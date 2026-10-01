@@ -10,8 +10,10 @@ from ..models.consultation import Consultation
 from ..models.consultation_message import ConsultationMessage
 from ..models.patient import Patient
 from ..schemas.consultation import ExtractedIntakeData, ConsultationSummaryResponse
+from .twilio_service import twilio_service, normalize_phone_e164
+import logging
 
-
+logger = logging.getLogger(__name__)
 class ConsultationService:
 
     @staticmethod
@@ -91,8 +93,68 @@ class ConsultationService:
             consultation.severity = intake_data.severity
         if intake_data.preferred_language:
             consultation.preferred_language = intake_data.preferred_language
+            
+        is_new_emergency = intake_data.should_flag_emergency and not consultation.emergency_flag
+        
         if intake_data.should_flag_emergency:
             consultation.emergency_flag = True
+            # Store emergency reason from chief complaint
+            if intake_data.chief_complaint and not consultation.emergency_reason:
+                consultation.emergency_reason = intake_data.chief_complaint
+
+            if is_new_emergency and consultation.patient_id:
+                patient = db.query(Patient).filter(Patient.patient_id == consultation.patient_id).first()
+                if not patient:
+                    logger.warning(
+                        "Emergency escalation: patient_id %s not found for session %s",
+                        consultation.patient_id,
+                        session_id,
+                    )
+                elif not patient.emergency_contact:
+                    logger.warning(
+                        "Emergency escalation: no emergency_contact for patient %s (%s)",
+                        patient.patient_id,
+                        patient.name,
+                    )
+                else:
+                    to_number = normalize_phone_e164(patient.emergency_contact)
+                    patient_name = patient.name
+                    location_info = (
+                        f"Location coordinates are {consultation.latitude}, {consultation.longitude}."
+                        if consultation.latitude
+                        else "Location is unknown."
+                    )
+                    time_info = consultation.created_at.strftime("%I:%M %p on %B %d, %Y")
+                    reason = consultation.emergency_reason or intake_data.chief_complaint or "severe distress"
+                    symptoms_str = ", ".join(intake_data.symptoms) if intake_data.symptoms else "not specified"
+                    clinical_summary = intake_data.clinical_summary or "Not available."
+
+                    msg = (
+                        f"URGENT EMERGENCY ALERT from HealthCall AI. "
+                        f"The patient, {patient_name}, age {patient.age}, gender {patient.gender}, is currently experiencing a critical medical emergency. "
+                        f"The primary reason for this escalation is: {reason}. "
+                        f"This emergency occurred and was reported to our AI at exactly {time_info}. "
+                        f"The patient's current location is {location_info}. "
+                        f"During their conversation with the AI, the following was gathered: {clinical_summary}. "
+                        f"Specific symptoms reported by the patient include: {symptoms_str}. "
+                        f"Please treat this with the utmost urgency, contact emergency services if necessary, and attempt to reach the patient immediately."
+                    )
+                    logger.info(
+                        "Emergency Twilio call for session %s, patient %s, to %s",
+                        session_id,
+                        patient.patient_id,
+                        to_number,
+                    )
+                    ok = twilio_service.call_emergency_contact(to_number, msg)
+                    if not ok:
+                        logger.error(
+                            "Emergency Twilio call failed for session %s (patient %s, number %s)",
+                            session_id,
+                            patient.patient_id,
+                            to_number,
+                        )
+
+
         if intake_data.intake_complete:
             consultation.intake_complete = True
 
@@ -180,6 +242,9 @@ class ConsultationService:
             preferred_language=consultation.preferred_language,
             emergency_flag=consultation.emergency_flag,
             emergency_reason=consultation.emergency_reason,
+            emergency_image_url=consultation.emergency_image_url,
+            latitude=consultation.latitude,
+            longitude=consultation.longitude,
             intake_complete=consultation.intake_complete,
             clinical_summary=clinical_summary,
             recommended_specialist=recommended_specialist,
@@ -238,6 +303,33 @@ class ConsultationService:
 
         consultation.summary = json.dumps(summary_payload)
         consultation.intake_complete = True
+        db.commit()
+        db.refresh(consultation)
+
+        return ConsultationService.get_summary(db, consultation.consultation_id)
+
+    @staticmethod
+    def update_location(
+        db: Session,
+        identifier: str,
+        latitude: str,
+        longitude: str
+    ) -> Optional[ConsultationSummaryResponse]:
+        """Updates location for a consultation."""
+        consultation = (
+            db.query(Consultation)
+            .filter(
+                (Consultation.consultation_id == identifier)
+                | (Consultation.session_id == identifier)
+            )
+            .first()
+        )
+        if not consultation:
+            return None
+
+        consultation.latitude = latitude
+        consultation.longitude = longitude
+        
         db.commit()
         db.refresh(consultation)
 

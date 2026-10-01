@@ -14,9 +14,11 @@ from ..models.consultation_message import ConsultationMessage
 from ..schemas.consultation import (
     StartConsultationRequest,
     SendMessageRequest,
+    UploadDocumentRequest,
     ConsultationSummaryResponse,
     ConsultationSummaryUpdateRequest,
     ExtractedIntakeData,
+    UpdateLocationRequest,
 )
 from ..services.consultation_service import ConsultationService
 from ..dependencies.auth import get_current_user
@@ -24,7 +26,7 @@ from ..dependencies.auth import get_current_user
 # Import Gemini engine from existing backend/gemini_client
 import sys
 import os
-from gemini_client import process_consultation_turn
+from gemini_client import process_consultation_turn, analyze_document
 from models import ConsultationSession, ExtractedIntakeData as GeminiIntakeData, ChatMessage, MessageRole, PatientProfile
 
 router = APIRouter(prefix="/api/consultations", tags=["Consultation"])
@@ -67,6 +69,15 @@ def start_consultation(
         session_id=session_id,
         patient_id=patient_profile.patient_id if patient_profile else None,
     )
+
+    if not is_guest and patient_profile:
+        from ..services.audit_service import log_audit_action
+        log_audit_action(
+            db=db, 
+            user_id=patient_profile.patient_id, 
+            user_role="Patient", 
+            action="Started a new AI consultation session"
+        )
 
     # Initialize Gemini session
     gemini_session = ConsultationSession(
@@ -300,6 +311,62 @@ def update_consultation_summary(
     return updated
 
 
+@router.post("/{session_id}/documents")
+async def upload_document(
+    session_id: str,
+    req: UploadDocumentRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Receives a base64 encoded document, analyzes it via Gemini, and adds the findings to the conversation context.
+    """
+    session = _ACTIVE_SESSIONS.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Active consultation session not found")
+        
+    analysis_result = await analyze_document(
+        file_base64=req.file_base64,
+        mime_type=req.mime_type,
+        language=req.language or session.intake_data.preferred_language or "en"
+    )
+    
+    # Store the result in the conversation history as a system message so the LLM knows about it
+    sys_msg = ChatMessage(role=MessageRole.system, content=f"Document Analysis Result: {analysis_result}")
+    session.conversation_history.append(sys_msg)
+    
+    # Save the interaction to DB
+    consultation = db.query(Consultation).filter(Consultation.session_id == session_id).first()
+    if consultation:
+        ConsultationService.add_message(db, consultation.id, "system", f"Document Analysis Result: {analysis_result}")
+        
+    return {
+        "status": "success",
+        "analysis": analysis_result
+    }
+
+@router.post("/{consultation_id}/location", response_model=ConsultationSummaryResponse)
+def update_consultation_location(
+    consultation_id: str,
+    req: UpdateLocationRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Updates the geographic location of the patient.
+    """
+    updated = ConsultationService.update_location(
+        db=db,
+        identifier=consultation_id,
+        latitude=req.latitude,
+        longitude=req.longitude,
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Consultation {consultation_id} not found.",
+        )
+    return updated
+
+
 @router.get("", response_model=List[ConsultationSummaryResponse])
 def get_my_consultations(
     current_user: dict = Depends(get_current_user),
@@ -322,3 +389,116 @@ def get_my_consultations(
         if summary:
             results.append(summary)
     return results
+
+from datetime import datetime, timezone
+
+def _time_ago(dt: datetime) -> str:
+    now = datetime.now(timezone.utc)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    diff = now - dt
+    minutes = int(diff.total_seconds() / 60)
+    if minutes < 1:
+        return "Just now"
+    if minutes < 60:
+        return f"{minutes} min ago"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours} hours ago"
+    return f"{hours // 24} days ago"
+
+@router.get("/emergencies/active")
+def get_active_emergencies(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns a list of all active emergency alerts for admin/doctor dashboards.
+    """
+    if current_user.get("role", "").lower() not in ["admin", "doctor"]:
+        raise HTTPException(status_code=403, detail=f"Unauthorized: role is {current_user.get('role')}")
+        
+    consultations = (
+        db.query(Consultation)
+        .filter(Consultation.emergency_flag == True)
+        .order_by(Consultation.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    
+    results = []
+    for c in consultations:
+        severity = "high"
+        if c.emergency_reason and "critical" in c.emergency_reason.lower():
+            severity = "critical"
+            
+        results.append({
+            "id": c.consultation_id,
+            "patientId": c.patient_id if c.patient_id else "Guest",
+            "patientName": c.patient.name if c.patient else "Guest Patient",
+            "symptomSummary": c.emergency_reason or c.chief_complaint or "Emergency assistance requested.",
+            "requestedTimeAgo": _time_ago(c.created_at),
+            "severityLevel": severity,
+            "timestamp": c.created_at.isoformat(),
+            "latitude": str(c.latitude) if c.latitude else None,
+            "longitude": str(c.longitude) if c.longitude else None,
+            "emergencyImageUrl": c.emergency_image_url,
+        })
+    return results
+
+
+@router.post("/emergencies/{emergency_id}/dispatch")
+def dispatch_doctor_to_emergency(
+    emergency_id: str,
+    body: dict,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Assign a doctor to an active emergency consultation."""
+    if current_user.get("role", "").lower() != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can dispatch doctors")
+    
+    doctor_id = body.get("doctor_id")
+    if not doctor_id:
+        raise HTTPException(status_code=400, detail="doctor_id is required")
+    
+    consultation = db.query(Consultation).filter(
+        Consultation.consultation_id == emergency_id
+    ).first()
+    
+    if not consultation:
+        raise HTTPException(status_code=404, detail="Emergency consultation not found")
+    
+    # Store the dispatched doctor ID (extend this as needed with a relationship)
+    consultation.doctor_id = doctor_id
+    db.commit()
+    
+    return {"message": "Doctor dispatched successfully", "emergency_id": emergency_id, "doctor_id": doctor_id}
+
+from pydantic import BaseModel
+from ..services.cloudinary_service import cloudinary_service
+
+class EmergencyImageRequest(BaseModel):
+    image_base64: str
+
+@router.post("/emergencies/{emergency_id}/image")
+def upload_emergency_image(
+    emergency_id: str,
+    body: EmergencyImageRequest,
+    db: Session = Depends(get_db),
+):
+    consultation = db.query(Consultation).filter(
+        (Consultation.consultation_id == emergency_id) | (Consultation.session_id == emergency_id)
+    ).first()
+    
+    if not consultation:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+        
+    url = cloudinary_service.upload_base64_image(body.image_base64)
+    if url:
+        consultation.emergency_image_url = url
+        db.commit()
+        return {"message": "Image uploaded successfully", "url": url}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to upload image")
+

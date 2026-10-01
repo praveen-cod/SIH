@@ -17,6 +17,12 @@ class SendMessageRequest(BaseModel):
     language: Optional[str] = None
 
 
+class UploadDocumentRequest(BaseModel):
+    file_base64: str
+    mime_type: str
+    language: Optional[str] = "en"
+
+
 class ExtractedIntakeData(BaseModel):
     chief_complaint: Optional[str] = None
     symptoms: List[str] = Field(default_factory=list)
@@ -47,6 +53,9 @@ class ConsultationSummaryResponse(BaseModel):
     preferred_language: str = "en"
     emergency_flag: bool = False
     emergency_reason: Optional[str] = None
+    emergency_image_url: Optional[str] = None
+    latitude: Optional[str] = None
+    longitude: Optional[str] = None
     intake_complete: bool = False
     clinical_summary: Optional[str] = None
     recommended_specialist: Optional[str] = None
@@ -67,3 +76,8 @@ class ConsultationSummaryUpdateRequest(BaseModel):
     clinical_summary: Optional[str] = None
     recommended_specialist: Optional[str] = None
     notes: Optional[str] = None
+
+
+class UpdateLocationRequest(BaseModel):
+    latitude: str
+    longitude: str

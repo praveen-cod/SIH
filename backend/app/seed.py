@@ -54,6 +54,9 @@ def seed_database(db: Session):
             email="patient@demo.com",
             password_hash=get_password_hash("Demo@1234"),
             is_active=True,
+            blood_group="O Positive",
+            city="Chennai",
+            country="Tamil Nadu",
         )
         db.add(patient)
 
